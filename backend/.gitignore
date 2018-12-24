@@ -77,3 +77,6 @@ gradle-app.setting
 
 # dev properties
 /application.properties
+
+*.webm
+*.png

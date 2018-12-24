@@ -1,7 +1,9 @@
 package in.dragonbra.muzeisheepbackend.cmd;
 
+import in.dragonbra.muzeisheepbackend.util.ProcessUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -30,6 +32,7 @@ public class Ffmpeg {
 
         Process p = rt.exec(String.format("ffprobe -v error -count_frames -select_streams v:0 -show_entries stream=nb_read_frames -of default=nokey=1:noprint_wrappers=1 %s",
                 file.getAbsolutePath()));
+        ProcessUtil.watchStream(p.getErrorStream(), logger, Level.ERROR);
 
         BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
@@ -59,12 +62,23 @@ public class Ffmpeg {
         logger.info(String.format("extracting frame %d from %s...", frame, file.toString()));
         Runtime rt = Runtime.getRuntime();
 
-        String fileName = outPath + ".png";
+        if (!outPath.endsWith(".png")) {
+            outPath = outPath + ".png";
+        }
 
         Process p = rt.exec(String.format("ffmpeg -i %s -vf \"select=gte(n\\,%d)\" -vframes 1 %s",
-                file.getAbsolutePath(), frame, fileName));
+                file.getAbsolutePath(), frame, outPath));
+        ProcessUtil.watchStream(p.getErrorStream(), logger, Level.ERROR);
         p.waitFor();
 
-        return new File(fileName);
+        File result = new File(outPath);
+
+        if (result.exists()) {
+            logger.info(String.format("Saved frame %d to %s", frame, result.toString()));
+        } else {
+            logger.info(String.format("Failed to frame %d to %s", frame, result.toString()));
+        }
+
+        return new File(outPath);
     }
 }
