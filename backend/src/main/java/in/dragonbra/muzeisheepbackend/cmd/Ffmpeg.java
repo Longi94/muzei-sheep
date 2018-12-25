@@ -51,26 +51,32 @@ public class Ffmpeg {
     }
 
     /**
-     * Extract a specific frame from a video file using ffmpeg into a png file.
+     * Extract 3 frames from the video roughly at the quarter break points.
      *
-     * @param file  the video file
-     * @param frame the frame to extract
+     * @param file the video file
+     * @param out  the output folder
      * @throws IOException io exception
      */
-    public static void extractFrame(File file, int frame, File out) throws IOException, InterruptedException {
-        logger.info(String.format("extracting frame %d from %s...", frame, file.toString()));
+    public static File[] extractFrames(File file, int frameCount, File out) throws IOException, InterruptedException {
+        logger.info(String.format("extracting frames from %s...", file.toString()));
         Runtime rt = Runtime.getRuntime();
 
-        Process p = rt.exec(String.format("ffmpeg -y -i %s -vf \"select=gte(n\\,%d)\" -vframes 1 %s",
-                file.getAbsolutePath(), frame, out.getAbsolutePath()));
+        Process p = rt.exec(String.format("ffmpeg -y -i %s -vf select=\"not(mod(n\\,%d)), select=gte(n\\,1)\",setpts=N/TB -r 1 -vframes 4 %s/frame%%03d.png",
+                file.getAbsolutePath(), frameCount / 4, out.getAbsolutePath()));
         ProcessUtil.watchStream(p.getErrorStream(), logger, Level.INFO);
 
         p.waitFor();
 
-        if (out.exists()) {
-            logger.info(String.format("Saved frame %d to %s", frame, out.toString()));
+        File frame1 = new File(out, "frame001.png");
+        File frame2 = new File(out, "frame002.png");
+        File frame3 = new File(out, "frame003.png");
+
+        if (frame1.exists() && frame2.exists() && frame3.exists()) {
+            logger.info(String.format("Saved frames to %s", out.toString()));
         } else {
-            logger.info(String.format("Failed to frame %d to %s", frame, out.toString()));
+            logger.info(String.format("Failed to save frames to %s", out.toString()));
         }
+
+        return new File[]{frame1, frame2, frame3};
     }
 }

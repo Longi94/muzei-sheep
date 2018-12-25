@@ -27,7 +27,7 @@ public class YoutubeService {
 
     private static final Logger logger = LogManager.getLogger(YoutubeService.class);
 
-    private static final double EPSILON = 0.01;
+    private static final double EPSILON = 0.05;
 
     @Value("${youtube.channel.uploads-id}")
     private String playlistId;
@@ -83,31 +83,26 @@ public class YoutubeService {
             return null;
         }
 
-        int frames = Ffmpeg.countFrames(videoFile);
+        int frameCount = Ffmpeg.countFrames(videoFile);
 
-        if (frames < 1) {
+        if (frameCount < 1) {
             logger.warn("Failed to count frames for " + id);
             return null;
         }
 
-        File ss1 = new File(temp, "ss1.png");
-        Ffmpeg.extractFrame(videoFile, frames / 4, ss1);
+        File[] frames = Ffmpeg.extractFrames(videoFile, frameCount, temp);
 
-        File ss2 = new File(temp, "ss2.png");
-        Ffmpeg.extractFrame(videoFile, frames / 2, ss2);
-
-        File ss3 = new File(temp, "ss3.png");
-        Ffmpeg.extractFrame(videoFile, frames / 4 * 3, ss3);
-
-        if (!ss1.exists() || !ss2.exists() || !ss3.exists()) {
+        if (!frames[0].exists() || !frames[1].exists() || !frames[2].exists()) {
             logger.error("Failed to extract frames from " + id);
             return null;
         }
 
         logger.info("Calculating similarity scores for screenshots...");
-        double score1 = ImageTool.similarity(ss1, ss2);
-        double score2 = ImageTool.similarity(ss1, ss3);
-        double score3 = ImageTool.similarity(ss3, ss2);
+        double score1 = ImageTool.similarity(frames[0], frames[1]);
+        double score2 = ImageTool.similarity(frames[2], frames[1]);
+        double score3 = ImageTool.similarity(frames[0], frames[2]);
+
+        logger.info(String.format("Similarity scores [%s,%s,%s]", score1, score2, score3));
 
         File result = null;
 
@@ -115,16 +110,16 @@ public class YoutubeService {
             // safe to assume that the video is a still image, keep a screenshot for the wallpaper
             logger.info("Saving screenshot");
             result = new File(outputFolder, id + ".png");
-            Files.copy(ss2.toPath(), result.toPath());
+            Files.copy(frames[1].toPath(), result.toPath());
         } else {
             logger.info("Screenshots are not similar");
         }
 
         logger.info("Cleaning up...");
+        for (File frame : frames) {
+            frame.delete();
+        }
         videoFile.delete();
-        ss1.delete();
-        ss2.delete();
-        ss3.delete();
         temp.delete();
 
         return result;

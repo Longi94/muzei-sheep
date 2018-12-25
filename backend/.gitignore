@@ -80,3 +80,6 @@ gradle-app.setting
 
 *.webm
 *.png
+
+temp/
+output/
