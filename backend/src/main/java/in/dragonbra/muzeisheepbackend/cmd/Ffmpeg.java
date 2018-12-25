@@ -55,30 +55,22 @@ public class Ffmpeg {
      *
      * @param file  the video file
      * @param frame the frame to extract
-     * @return File object pointing to the extracted frame
      * @throws IOException io exception
      */
-    public static File extractFrame(File file, int frame, String outPath) throws IOException, InterruptedException {
+    public static void extractFrame(File file, int frame, File out) throws IOException, InterruptedException {
         logger.info(String.format("extracting frame %d from %s...", frame, file.toString()));
         Runtime rt = Runtime.getRuntime();
 
-        if (!outPath.endsWith(".png")) {
-            outPath = outPath + ".png";
-        }
+        Process p = rt.exec(String.format("ffmpeg -y -i %s -vf \"select=gte(n\\,%d)\" -vframes 1 %s",
+                file.getAbsolutePath(), frame, out.getAbsolutePath()));
+        ProcessUtil.watchStream(p.getErrorStream(), logger, Level.INFO);
 
-        Process p = rt.exec(String.format("ffmpeg -i %s -vf \"select=gte(n\\,%d)\" -vframes 1 %s",
-                file.getAbsolutePath(), frame, outPath));
-        ProcessUtil.watchStream(p.getErrorStream(), logger, Level.ERROR);
         p.waitFor();
 
-        File result = new File(outPath);
-
-        if (result.exists()) {
-            logger.info(String.format("Saved frame %d to %s", frame, result.toString()));
+        if (out.exists()) {
+            logger.info(String.format("Saved frame %d to %s", frame, out.toString()));
         } else {
-            logger.info(String.format("Failed to frame %d to %s", frame, result.toString()));
+            logger.info(String.format("Failed to frame %d to %s", frame, out.toString()));
         }
-
-        return new File(outPath);
     }
 }

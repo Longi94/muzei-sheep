@@ -19,29 +19,29 @@ public class YoutubeDl {
      * Download a youtube video to a webm file. <a href="https://github.com/rg3/youtube-dl">youtube-dl</a> must be
      * installed on the running machine.
      *
-     * @param id The ID of the Youtube video
+     * @param id              The ID of the Youtube video
+     * @param outputDirectory directory to save the file into
      * @return a {@link File} object pointing to the downloaded video file
      * @throws IOException exception while executing the youtube-dl command
      */
-    public static File download(String id, String outputDirectory) throws IOException {
+    public static File download(String id, File outputDirectory) throws IOException {
         logger.info(String.format("Downloading youtube video %s...", id));
 
-        String output = outputDirectory + "/" + id + ".webm";
+        File output = new File(outputDirectory, id + ".webm");
 
         Runtime rt = Runtime.getRuntime();
-        Process p = rt.exec(String.format("youtube-dl -f webm -o %s https://www.youtube.com/watch?v=%s", output, id));
+        Process p = rt.exec(String.format("youtube-dl -f webm -o %s https://www.youtube.com/watch?v=%s",
+                output.getAbsolutePath(), id));
 
         try {
             ProcessUtil.watch(p, logger);
             p.waitFor();
 
             logger.info("Finished downloading " + id);
-
-            return new File(output);
         } catch (InterruptedException e) {
             logger.error("Failed to download " + id, e);
         }
 
-        return null;
+        return output;
     }
 }
