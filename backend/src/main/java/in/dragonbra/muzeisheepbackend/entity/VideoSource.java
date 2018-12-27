@@ -18,6 +18,9 @@ public class VideoSource {
     @Column(name = "processed", nullable = false)
     private boolean processed = false;
 
+    @Column(name = "has_image", nullable = false)
+    private boolean hasImage = false;
+
     @Column(name = "title")
     private String title;
 
@@ -39,6 +42,14 @@ public class VideoSource {
 
     public void setProcessed(boolean processed) {
         this.processed = processed;
+    }
+
+    public boolean isHasImage() {
+        return hasImage;
+    }
+
+    public void setHasImage(boolean hasImage) {
+        this.hasImage = hasImage;
     }
 
     public String getTitle() {

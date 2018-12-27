@@ -130,7 +130,7 @@ public class YoutubeService {
                 continue;
             }
 
-            Date itemDate = null;
+            Date itemDate;
 
             try {
                 itemDate = DateUtil.ISO_8601.parse(playlistItem.getSnippet().getPublishedAt());
@@ -152,8 +152,7 @@ public class YoutubeService {
             videoSource.setTitle(playlistItem.getSnippet().getTitle());
             videoSource.setPublishedAt(itemDate);
 
-            boolean processed = processVideo(id);
-            videoSource.setProcessed(processed);
+            processVideo(id, videoSource);
 
             videoSourceRepository.save(videoSource);
         }
@@ -162,7 +161,7 @@ public class YoutubeService {
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    private boolean processVideo(String id) throws IOException, InterruptedException {
+    private void processVideo(String id, VideoSource videoSource) throws IOException, InterruptedException {
         logger.info(String.format("Processing video %s...", id));
 
         // create output dir
@@ -175,21 +174,21 @@ public class YoutubeService {
 
         if (!videoFile.exists()) {
             logger.warn("Failed to download video " + id);
-            return false;
+            videoSource.setProcessed(false);
         }
 
         int frameCount = Ffmpeg.countFrames(videoFile);
 
         if (frameCount < 1) {
             logger.warn("Failed to count frames for " + id);
-            return false;
+            videoSource.setProcessed(false);
         }
 
         File[] frames = Ffmpeg.extractFrames(videoFile, frameCount, temp);
 
         if (!frames[0].exists() || !frames[1].exists() || !frames[2].exists()) {
             logger.error("Failed to extract frames from " + id);
-            return false;
+            videoSource.setProcessed(false);
         }
 
         logger.info("Calculating similarity scores for screenshots...");
@@ -204,7 +203,10 @@ public class YoutubeService {
             logger.info("Saving screenshot");
             File resultFile = new File(outputFolder, id + ".png");
             Files.copy(frames[1].toPath(), resultFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+            videoSource.setHasImage(true);
         } else {
+            videoSource.setHasImage(false);
             logger.info("Screenshots are not similar");
         }
 
@@ -214,7 +216,5 @@ public class YoutubeService {
         }
         videoFile.delete();
         temp.delete();
-
-        return true;
     }
 }
