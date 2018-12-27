@@ -11,6 +11,6 @@ import org.springframework.boot.web.servlet.support.SpringBootServletInitializer
 @SpringBootApplication
 public class MuzeiSheepBackendApp extends SpringBootServletInitializer {
     public static void main(String[] args) {
-        SpringApplication.run(MuzeiSheepBackendApp.class, args);
+        SpringApplication.run(MuzeiSheepBackendApp.class, args).close();
     }
 }

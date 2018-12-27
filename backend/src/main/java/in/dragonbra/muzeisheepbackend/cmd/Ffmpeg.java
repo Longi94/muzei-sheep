@@ -53,17 +53,20 @@ public class Ffmpeg {
     /**
      * Extract 3 frames from the video roughly at the quarter break points.
      *
-     * @param file the video file
-     * @param out  the output folder
-     * @throws IOException io exception
+     * @param file       the video file
+     * @param frameCount number of frames in the video
+     * @param out        the output folder
+     * @return File objects pointing to the frames
+     * @throws IOException          io exception
+     * @throws InterruptedException waitFor interrupted
      */
     public static File[] extractFrames(File file, int frameCount, File out) throws IOException, InterruptedException {
         logger.info(String.format("extracting frames from %s...", file.toString()));
         Runtime rt = Runtime.getRuntime();
 
-        Process p = rt.exec(String.format("ffmpeg -y -i %s -vf select=\"not(mod(n\\,%d)), select=gte(n\\,1)\",setpts=N/TB -r 1 -vframes 4 %s/frame%%03d.png",
+        Process p = rt.exec(String.format("ffmpeg -y -i %s -vf select=\"not(mod(n\\,%d)), select=gte(n\\,1)\",setpts=N/TB -r 1 -vframes 3 %s/frame%%03d.png",
                 file.getAbsolutePath(), frameCount / 4, out.getAbsolutePath()));
-        ProcessUtil.watchStream(p.getErrorStream(), logger, Level.INFO);
+        ProcessUtil.watchStream(p.getErrorStream(), logger, Level.DEBUG);
 
         p.waitFor();
 

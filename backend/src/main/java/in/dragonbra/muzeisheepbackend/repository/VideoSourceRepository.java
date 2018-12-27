@@ -8,4 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * @since 2018-12-25
  */
 public interface VideoSourceRepository extends JpaRepository<VideoSource, String> {
+    VideoSource findFirstByOrderByPublishedAtDesc();
 }

@@ -18,10 +18,10 @@ public class VideoSource {
     @Column(name = "processed", nullable = false)
     private boolean processed = false;
 
-    @Column(name = "name")
-    private String name;
+    @Column(name = "title")
+    private String title;
 
-    @Column(name = "published_at", nullable = false)
+    @Column(name = "published_at")
     @Temporal(TemporalType.TIMESTAMP)
     private Date publishedAt;
 
@@ -41,12 +41,12 @@ public class VideoSource {
         this.processed = processed;
     }
 
-    public String getName() {
-        return name;
+    public String getTitle() {
+        return title;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     public Date getPublishedAt() {
