@@ -9,8 +9,8 @@ import in.dragonbra.muzeisheepbackend.retrofit.YoutubeInterface;
 import in.dragonbra.muzeisheepbackend.retrofit.model.YoutubeResponse;
 import in.dragonbra.muzeisheepbackend.retrofit.model.youtube.PlaylistItem;
 import in.dragonbra.muzeisheepbackend.util.DateUtil;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -32,7 +32,7 @@ import java.util.List;
 @Service
 public class YoutubeService {
 
-    private static final Logger logger = LogManager.getLogger(YoutubeService.class);
+    private static final Logger logger = LoggerFactory.getLogger(YoutubeService.class);
 
     private static final double EPSILON = 0.05;
 
@@ -98,7 +98,7 @@ public class YoutubeService {
 
         if (!response.isSuccessful()) {
             logger.error("Failed to download video playlist");
-            logger.error(response.code());
+            logger.error(String.valueOf(response.code()));
             logger.error(response.message());
             return null;
         }
