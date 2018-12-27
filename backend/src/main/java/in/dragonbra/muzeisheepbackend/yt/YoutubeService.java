@@ -23,6 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author lngtr
@@ -152,16 +153,30 @@ public class YoutubeService {
             videoSource.setTitle(playlistItem.getSnippet().getTitle());
             videoSource.setPublishedAt(itemDate);
 
-            processVideo(id, videoSource);
+            processVideo(videoSource);
 
             videoSourceRepository.save(videoSource);
+            videoSourceRepository.flush();
         }
 
         return true;
     }
 
+    public void retryUnprocessed() throws IOException, InterruptedException {
+        List<VideoSource> videoSources = videoSourceRepository.findAllByProcessedIsFalse();
+
+        for (VideoSource videoSource : videoSources) {
+            processVideo(videoSource);
+
+            videoSourceRepository.save(videoSource);
+            videoSourceRepository.flush();
+        }
+    }
+
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    private void processVideo(String id, VideoSource videoSource) throws IOException, InterruptedException {
+    private void processVideo(VideoSource videoSource) throws IOException, InterruptedException {
+        String id = videoSource.getId();
+
         logger.info(String.format("Processing video %s...", id));
 
         // create output dir
@@ -175,6 +190,7 @@ public class YoutubeService {
         if (!videoFile.exists()) {
             logger.warn("Failed to download video " + id);
             videoSource.setProcessed(false);
+            return;
         }
 
         int frameCount = Ffmpeg.countFrames(videoFile);
@@ -182,6 +198,7 @@ public class YoutubeService {
         if (frameCount < 1) {
             logger.warn("Failed to count frames for " + id);
             videoSource.setProcessed(false);
+            return;
         }
 
         File[] frames = Ffmpeg.extractFrames(videoFile, frameCount, temp);
@@ -189,6 +206,7 @@ public class YoutubeService {
         if (!frames[0].exists() || !frames[1].exists() || !frames[2].exists()) {
             logger.error("Failed to extract frames from " + id);
             videoSource.setProcessed(false);
+            return;
         }
 
         logger.info("Calculating similarity scores for screenshots...");
