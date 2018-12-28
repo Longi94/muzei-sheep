@@ -1,5 +1,6 @@
 package in.dragonbra.muzeisheepbackend.controller;
 
+import in.dragonbra.muzeisheepbackend.controller.exception.BadRequestException;
 import in.dragonbra.muzeisheepbackend.controller.exception.NotFoundException;
 import in.dragonbra.muzeisheepbackend.entity.VideoSource;
 import in.dragonbra.muzeisheepbackend.repository.VideoSourceRepository;
@@ -15,6 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.*;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author lngtr
@@ -23,6 +26,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api")
 public class ImageController {
+
+    private static final Pattern YOUTUBE_ID_PATTERN = Pattern.compile("^[^\"&?/\\s.]{11}$");
 
     @Value("${output-folder}")
     private String outputFolder;
@@ -40,7 +45,13 @@ public class ImageController {
     }
 
     @GetMapping(value = "/images/{id}", produces = MediaType.IMAGE_PNG_VALUE)
-    public byte[] getImage(@PathVariable("id") String id) {
+    public byte[] getImage(@PathVariable(value = "id", required = true) String id) {
+        Matcher idMatcher = YOUTUBE_ID_PATTERN.matcher(id);
+
+        if (!idMatcher.matches()) {
+            throw new BadRequestException();
+        }
+
         try {
             File file = new File(outputFolder, id + ".png");
             InputStream is = new FileInputStream(file);
