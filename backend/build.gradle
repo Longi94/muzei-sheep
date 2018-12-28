@@ -15,14 +15,24 @@ apply plugin: 'eclipse'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
 
+archivesBaseName = 'muzeisheep-backend'
 group = 'in.dragonbra'
-version = '0.0.1-SNAPSHOT'
+version = '1.0.0'
 sourceCompatibility = 1.8
 
 repositories {
     mavenCentral()
 }
 
+jar {
+    baseName = 'muzeisheep-backend'
+    version = version
+    manifest {
+        attributes(
+                'Main-Class': 'in.dragonbra.muzeisheepbackend.MuzeiSheepBackendApp'
+        )
+    }
+}
 
 dependencies {
     implementation('org.springframework.boot:spring-boot-starter-data-jpa')
