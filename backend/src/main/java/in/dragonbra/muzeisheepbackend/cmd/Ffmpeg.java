@@ -64,9 +64,21 @@ public class Ffmpeg {
         logger.info(String.format("extracting frames from %s...", file.toString()));
         Runtime rt = Runtime.getRuntime();
 
-        Process p = rt.exec(String.format("ffmpeg -y -i %s -vf select=\"not(mod(n\\,%d)), select=gte(n\\,1)\",setpts=N/TB -r 1 -vframes 3 %s/frame%%03d.png",
-                file.getAbsolutePath(), frameCount / 4, out.getAbsolutePath()));
-        ProcessUtil.watchStream(p.getErrorStream(), logger, Level.DEBUG);
+        Process p = rt.exec(new String[]{
+                "ffmpeg",
+                "-y",
+                "-i",
+                file.getAbsolutePath(),
+                "-vf",
+                "select='not(mod(n\\," + (frameCount / 4) + "))',select='gte(n\\,1)',setpts=N/TB",
+                "-r",
+                "1",
+                "-vframes",
+                "3",
+                out.getAbsolutePath() + "/frame%03d.png"
+        });
+
+        ProcessUtil.watch(p, logger);
 
         p.waitFor();
 

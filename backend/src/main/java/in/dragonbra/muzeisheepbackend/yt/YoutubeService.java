@@ -234,5 +234,7 @@ public class YoutubeService {
         }
         videoFile.delete();
         temp.delete();
+
+        videoSource.setProcessed(true);
     }
 }
